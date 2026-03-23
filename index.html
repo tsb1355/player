@@ -1,4 +1,4 @@
-<div class="radio-ui">
+<div class="radio-ui-custom">
     <img class="cover" src="https://via.placeholder.com/80">
 
     <div class="text">
@@ -16,69 +16,64 @@
 </div>
 
 <style>
-.radio-ui {
-    max-width: 500px; /* più grande */
-    width: 100%;
-    background: #1a0f12; /* base più scura rossa */
-    border-radius: 25px;
-    padding: 25px;
-    display: grid;
-    grid-template-columns: 100px 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 12px 18px;
-    align-items: center;
-    color: white;
-    font-family: Arial;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+/* FORZATO con !important */
+.radio-ui-custom {
+    max-width: 520px !important;
+    width: 100% !important;
+    background: #120606 !important;
+    border-radius: 30px !important;
+    padding: 30px !important;
+    display: grid !important;
+    grid-template-columns: 110px 1fr auto !important;
+    gap: 15px 20px !important;
+    align-items: center !important;
+    color: white !important;
+    font-family: Arial !important;
+    box-shadow: 0 15px 40px rgba(255,0,0,0.3) !important;
 }
 
-/* cover più grande */
-.cover {
-    width: 90px;
-    height: 90px;
-    border-radius: 12px;
-    object-fit: cover;
-    grid-row: span 2;
+.radio-ui-custom .cover {
+    width: 100px !important;
+    height: 100px !important;
+    border-radius: 15px !important;
+    object-fit: cover !important;
 }
 
-/* titolo più visibile */
-.title {
-    font-size: 20px;
-    font-weight: bold;
+.radio-ui-custom .title {
+    font-size: 22px !important;
+    font-weight: bold !important;
 }
 
-/* artista */
-.artist {
-    opacity: 0.7;
-    font-size: 15px;
+.radio-ui-custom .artist {
+    font-size: 16px !important;
+    opacity: 0.8 !important;
 }
 
-/* bottone rosso principale */
-.play {
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(135deg, #ff2e2e, #b30000);
-    border-radius: 50%;
-    color: white;
-    font-size: 24px;
-    border: none;
-    cursor: pointer;
-    grid-row: span 2;
-    box-shadow: 0 5px 15px rgba(255,0,0,0.4);
+/* bottone bello rosso */
+.radio-ui-custom .play {
+    width: 75px !important;
+    height: 75px !important;
+    background: linear-gradient(135deg, #ff0000, #990000) !important;
+    border-radius: 50% !important;
+    font-size: 26px !important;
+    border: none !important;
+    cursor: pointer !important;
+    color: white !important;
+    box-shadow: 0 8px 20px rgba(255,0,0,0.5) !important;
 }
 
-/* volume rosso */
-.volume {
-    grid-column: 2 / span 2;
-    width: 100%;
-    accent-color: #ff2e2e;
+/* slider rosso */
+.radio-ui-custom .volume {
+    grid-column: 2 / span 2 !important;
+    width: 100% !important;
+    accent-color: red !important;
 }
 </style>
 
 <script>
 setTimeout(function(){
 
-    const player = document.querySelector(".radio-ui");
+    const player = document.querySelector(".radio-ui-custom");
     if (!player) return;
 
     const audio = player.querySelector(".radio");
@@ -107,35 +102,22 @@ setTimeout(function(){
             const res = await fetch("https://altair.streamerr.co/json/stream/radiocarducci?"+Date.now());
             const data = await res.json();
 
-            let song = data.songtitle || data.nowplaying || "";
-
-            if(!song || song.trim() === ""){
-                title.textContent = "Radio Carducci";
-                artist.textContent = "In onda";
-                return;
-            }
-
-            song = song.replace(/\s+/g, " ").trim();
-
-            let artistName = "";
-            let trackTitle = song;
+            let song = data.songtitle || "";
 
             if(song.includes(" - ")){
-                const parts = song.split(" - ");
-                artistName = parts[0].trim();
-                trackTitle = parts.slice(1).join(" - ").trim();
+                let parts = song.split(" - ");
+                artist.textContent = parts[0];
+                title.textContent = parts.slice(1).join(" - ");
+            } else {
+                title.textContent = song || "Radio Carducci";
+                artist.textContent = "In onda";
             }
-
-            title.textContent = trackTitle;
-            artist.textContent = artistName || "In onda";
 
             if(data.coverart){
                 cover.src = data.coverart.replace("100x100","300x300");
             }
 
-        } catch(e){
-            console.log("metadata error", e);
-        }
+        } catch(e){}
     }
 
     update();
