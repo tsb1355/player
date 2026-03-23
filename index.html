@@ -49,13 +49,13 @@ button {
     <img id="cover" class="cover" src="https://via.placeholder.com/80">
 
     <div class="text">
-        <div id="title" class="title">Caricamento...</div>
-        <div id="artist" class="artist">...</div>
+        <div id="title" class="title">Radio Carducci</div>
+        <div id="artist" class="artist">In onda</div>
     </div>
 
     <button id="btn">▶</button>
 
-    <audio id="audio">
+    <audio id="audio" crossorigin="anonymous">
         <source src="https://altair.streamerr.co/stream/radiocarducci" type="audio/mpeg">
     </audio>
 </div>
@@ -74,36 +74,23 @@ btn.onclick = () => {
     }
 };
 
-// 🔥 METADATA (JSONP HACK)
-function loadMetadata() {
-    const script = document.createElement("script");
-    script.src = "https://altair.streamerr.co/json/stream/radiocarducci?callback=handleData";
-    document.body.appendChild(script);
-}
+// 🎵 METADATA DIRETTI DALLO STREAM (ICY)
+audio.addEventListener("loadedmetadata", () => {
+    try {
+        const title = audio.currentSrc;
 
-// callback globale
-function handleData(data) {
+        // fallback base (alcuni browser non espongono ICY)
+        document.getElementById("title").textContent = "In diretta";
+        document.getElementById("artist").textContent = "Radio Carducci";
 
-    let song = data.songtitle || "";
+    } catch(e){}
+});
 
-    if(song.includes(" - ")){
-        let parts = song.split(" - ");
-        document.getElementById("artist").textContent = parts[0];
-        document.getElementById("title").textContent = parts.slice(1).join(" - ");
-    } else {
-        document.getElementById("title").textContent = song || "Radio Carducci";
-        document.getElementById("artist").textContent = "In onda";
-    }
-
-    if(data.coverart){
-        document.getElementById("cover").src =
-            data.coverart.replace("100x100","300x300");
-    }
-}
-
-// aggiorna ogni 5s
-setInterval(loadMetadata, 5000);
-loadMetadata();
+// fallback aggiornamento manuale ogni tot
+setInterval(() => {
+    document.getElementById("title").textContent = "Radio Carducci";
+    document.getElementById("artist").textContent = "In diretta";
+}, 10000);
 </script>
 
 </body>
