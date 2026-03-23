@@ -74,11 +74,17 @@ btn.onclick = () => {
     }
 };
 
-// 🔥 ORA USA IL TUO PROXY (FUNZIONA SICURO)
+// 🔥 PROXY CHE FUNZIONA DAVVERO
 async function update(){
     try{
-        const res = await fetch("/api/metadata");
+        const res = await fetch(
+            "https://api.codetabs.com/v1/proxy?quest=" +
+            encodeURIComponent("https://altair.streamerr.co/json/stream/radiocarducci")
+        );
+
         const data = await res.json();
+
+        console.log("DATA:", data);
 
         let song = data.songtitle || "";
 
@@ -97,7 +103,7 @@ async function update(){
         }
 
     } catch(e){
-        console.log("errore metadata", e);
+        console.log("ERRORE:", e);
     }
 }
 
