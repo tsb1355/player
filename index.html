@@ -49,13 +49,13 @@ button {
     <img id="cover" class="cover" src="https://via.placeholder.com/80">
 
     <div class="text">
-        <div id="title" class="title">Radio Carducci</div>
-        <div id="artist" class="artist">In onda</div>
+        <div id="title" class="title">Caricamento...</div>
+        <div id="artist" class="artist">...</div>
     </div>
 
     <button id="btn">▶</button>
 
-    <audio id="audio" crossorigin="anonymous">
+    <audio id="audio">
         <source src="https://altair.streamerr.co/stream/radiocarducci" type="audio/mpeg">
     </audio>
 </div>
@@ -74,23 +74,35 @@ btn.onclick = () => {
     }
 };
 
-// 🎵 METADATA DIRETTI DALLO STREAM (ICY)
-audio.addEventListener("loadedmetadata", () => {
-    try {
-        const title = audio.currentSrc;
+// 🔥 ORA USA IL TUO PROXY (FUNZIONA SICURO)
+async function update(){
+    try{
+        const res = await fetch("/api/metadata");
+        const data = await res.json();
 
-        // fallback base (alcuni browser non espongono ICY)
-        document.getElementById("title").textContent = "In diretta";
-        document.getElementById("artist").textContent = "Radio Carducci";
+        let song = data.songtitle || "";
 
-    } catch(e){}
-});
+        if(song.includes(" - ")){
+            let parts = song.split(" - ");
+            document.getElementById("artist").textContent = parts[0];
+            document.getElementById("title").textContent = parts.slice(1).join(" - ");
+        } else {
+            document.getElementById("title").textContent = song || "Radio Carducci";
+            document.getElementById("artist").textContent = "In onda";
+        }
 
-// fallback aggiornamento manuale ogni tot
-setInterval(() => {
-    document.getElementById("title").textContent = "Radio Carducci";
-    document.getElementById("artist").textContent = "In diretta";
-}, 10000);
+        if(data.coverart){
+            document.getElementById("cover").src =
+                data.coverart.replace("100x100","300x300");
+        }
+
+    } catch(e){
+        console.log("errore metadata", e);
+    }
+}
+
+setInterval(update, 5000);
+update();
 </script>
 
 </body>
