@@ -142,3 +142,38 @@ setTimeout(function(){
 
 }, 1000);
 </script>
+<script>
+setTimeout(function(){
+
+    // se mobile → forza aggiornamento semplice
+    if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+
+        async function mobileUpdate(){
+            try{
+                const res = await fetch("https://altair.streamerr.co/json/stream/radiocarducci");
+                const data = await res.json();
+
+                let song = data.songtitle || "";
+
+                if(song.includes(" - ")){
+                    let parts = song.split(" - ");
+                    document.querySelector(".artist").textContent = parts[0];
+                    document.querySelector(".title").textContent = parts.slice(1).join(" - ");
+                }
+
+                if(data.coverart){
+                    document.querySelector(".cover").src =
+                        data.coverart.replace("100x100","300x300");
+                }
+
+            } catch(e){
+                console.log("mobile fallback attivo");
+            }
+        }
+
+        mobileUpdate();
+        setInterval(mobileUpdate, 7000);
+    }
+
+}, 2000);
+</script>
