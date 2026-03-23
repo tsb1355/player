@@ -17,53 +17,61 @@
 
 <style>
 .radio-ui {
-    max-width: 420px;
+    max-width: 500px; /* più grande */
     width: 100%;
-    background: #1e2b3f;
+    background: #1a0f12; /* base più scura rossa */
     border-radius: 25px;
-    padding: 20px;
+    padding: 25px;
     display: grid;
-    grid-template-columns: 80px 1fr auto;
+    grid-template-columns: 100px 1fr auto;
     grid-template-rows: auto auto;
-    gap: 10px 15px;
+    gap: 12px 18px;
     align-items: center;
     color: white;
     font-family: Arial;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
+/* cover più grande */
 .cover {
-    width: 70px;
-    height: 70px;
-    border-radius: 10px;
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
     object-fit: cover;
     grid-row: span 2;
 }
 
+/* titolo più visibile */
 .title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
 }
 
+/* artista */
 .artist {
     opacity: 0.7;
-    font-size: 14px;
+    font-size: 15px;
 }
 
+/* bottone rosso principale */
 .play {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #ff5f5f, #ff2e2e);
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #ff2e2e, #b30000);
     border-radius: 50%;
     color: white;
-    font-size: 22px;
+    font-size: 24px;
     border: none;
     cursor: pointer;
     grid-row: span 2;
+    box-shadow: 0 5px 15px rgba(255,0,0,0.4);
 }
 
+/* volume rosso */
 .volume {
     grid-column: 2 / span 2;
     width: 100%;
+    accent-color: #ff2e2e;
 }
 </style>
 
@@ -80,7 +88,6 @@ setTimeout(function(){
     const artist = player.querySelector(".artist");
     const cover = player.querySelector(".cover");
 
-    // PLAY
     btn.onclick = function(){
         if(audio.paused){
             audio.play();
@@ -91,18 +98,14 @@ setTimeout(function(){
         }
     };
 
-    // VOLUME
     volume.oninput = function(e){
         audio.volume = e.target.value;
     };
 
-    // METADATA
     async function update(){
         try{
             const res = await fetch("https://altair.streamerr.co/json/stream/radiocarducci?"+Date.now());
             const data = await res.json();
-
-            console.log("DATI:", data); // debug
 
             let song = data.songtitle || data.nowplaying || "";
 
@@ -112,7 +115,6 @@ setTimeout(function(){
                 return;
             }
 
-            // pulizia stringa
             song = song.replace(/\s+/g, " ").trim();
 
             let artistName = "";
@@ -124,13 +126,9 @@ setTimeout(function(){
                 trackTitle = parts.slice(1).join(" - ").trim();
             }
 
-            if(!trackTitle) trackTitle = song;
-
-            // aggiorna UI
             title.textContent = trackTitle;
             artist.textContent = artistName || "In onda";
 
-            // cover
             if(data.coverart){
                 cover.src = data.coverart.replace("100x100","300x300");
             }
