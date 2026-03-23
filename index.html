@@ -10,38 +10,36 @@
 
     <input type="range" class="volume" min="0" max="1" step="0.01" value="1">
 
-    <audio class="radio">
+    <audio class="radio" playsinline>
         <source src="https://altair.streamerr.co/stream/radiocarducci" type="audio/mpeg">
     </audio>
 </div>
 
 <style>
 .radio-ui {
-    max-width: 520px; /* PIÙ GRANDE */
+    max-width: 520px;
     width: 100%;
-    background: #140606; /* PIÙ ROSSO SCURO */
+    background: #140606;
     border-radius: 30px;
-    padding: 30px; /* PIÙ SPAZIO */
+    padding: 30px;
     display: grid;
-    grid-template-columns: 100px 1fr auto; /* PIÙ GRANDE */
-    grid-template-rows: auto auto;
+    grid-template-columns: 100px 1fr auto;
     gap: 15px 20px;
     align-items: center;
     color: white;
     font-family: Arial;
-    box-shadow: 0 12px 35px rgba(255,0,0,0.3); /* GLOW ROSSO */
+    box-shadow: 0 12px 35px rgba(255,0,0,0.3);
 }
 
 .cover {
-    width: 90px; /* PIÙ GRANDE */
+    width: 90px;
     height: 90px;
     border-radius: 12px;
     object-fit: cover;
-    grid-row: span 2;
 }
 
 .title {
-    font-size: 22px; /* PIÙ GRANDE */
+    font-size: 22px;
     font-weight: bold;
 }
 
@@ -50,7 +48,6 @@
     font-size: 16px;
 }
 
-/* BOTTONE ROSSO PIÙ EVIDENTE */
 .play {
     width: 75px;
     height: 75px;
@@ -60,15 +57,13 @@
     font-size: 26px;
     border: none;
     cursor: pointer;
-    grid-row: span 2;
     box-shadow: 0 8px 20px rgba(255,0,0,0.5);
 }
 
-/* SLIDER ROSSO */
 .volume {
     grid-column: 2 / span 2;
     width: 100%;
-    accent-color: #ff0000;
+    accent-color: red;
 }
 </style>
 
@@ -85,6 +80,7 @@ setTimeout(function(){
     const artist = player.querySelector(".artist");
     const cover = player.querySelector(".cover");
 
+    // PLAY
     btn.onclick = function(){
         if(audio.paused){
             audio.play();
@@ -95,85 +91,76 @@ setTimeout(function(){
         }
     };
 
+    // VOLUME
     volume.oninput = function(e){
         audio.volume = e.target.value;
     };
 
+    // DESKTOP METADATA
     async function update(){
         try{
             const res = await fetch("https://altair.streamerr.co/json/stream/radiocarducci?"+Date.now());
             const data = await res.json();
 
-            let song = data.songtitle || data.nowplaying || "";
-
-            if(!song || song.trim() === ""){
-                title.textContent = "Radio Carducci";
-                artist.textContent = "In onda";
-                return;
-            }
-
-            song = song.replace(/\s+/g, " ").trim();
-
-            let artistName = "";
-            let trackTitle = song;
-
-            if(song.includes(" - ")){
-                const parts = song.split(" - ");
-                artistName = parts[0].trim();
-                trackTitle = parts.slice(1).join(" - ").trim();
-            }
-
-            if(!trackTitle) trackTitle = song;
-
-            title.textContent = trackTitle;
-            artist.textContent = artistName || "In onda";
-
-            if(data.coverart){
-                cover.src = data.coverart.replace("100x100","300x300");
-            }
+            applyData(data);
 
         } catch(e){
-            console.log("metadata error", e);
+            console.log("fetch fallito → uso fallback mobile");
         }
     }
+
+    // MOBILE FALLBACK (iframe)
+    function updateFromFrame(){
+        try{
+            const frame = document.getElementById("metaFrame");
+            if(!frame) return;
+
+            const text = frame.contentDocument.body.innerText;
+            const data = JSON.parse(text);
+
+            applyData(data);
+
+        } catch(e){
+            console.log("iframe fallback attivo");
+        }
+    }
+
+    // APPLICA DATI
+    function applyData(data){
+        let song = data.songtitle || data.nowplaying || "";
+
+        if(!song) return;
+
+        song = song.trim();
+
+        let artistName = "";
+        let trackTitle = song;
+
+        if(song.includes(" - ")){
+            const parts = song.split(" - ");
+            artistName = parts[0];
+            trackTitle = parts.slice(1).join(" - ");
+        }
+
+        title.textContent = trackTitle;
+        artist.textContent = artistName || "In onda";
+
+        if(data.coverart){
+            cover.src = data.coverart.replace("100x100","300x300");
+        }
+    }
+
+    // iframe nascosto per mobile
+    const iframe = document.createElement("iframe");
+    iframe.id = "metaFrame";
+    iframe.src = "https://altair.streamerr.co/json/stream/radiocarducci";
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
 
     update();
     setInterval(update, 5000);
 
+    setInterval(updateFromFrame, 7000);
+
 }, 1000);
-</script>
-<script>
-setTimeout(function(){
-
-    // se mobile → forza aggiornamento semplice
-    if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-
-        async function mobileUpdate(){
-            try{
-                const res = await fetch("https://altair.streamerr.co/json/stream/radiocarducci");
-                const data = await res.json();
-
-                let song = data.songtitle || "";
-
-                if(song.includes(" - ")){
-                    let parts = song.split(" - ");
-                    document.querySelector(".artist").textContent = parts[0];
-                    document.querySelector(".title").textContent = parts.slice(1).join(" - ");
-                }
-
-                if(data.coverart){
-                    document.querySelector(".cover").src =
-                        data.coverart.replace("100x100","300x300");
-                }
-
-            } catch(e){
-                console.log("mobile fallback attivo");
-            }
-        }
-
-        mobileUpdate();
-        setInterval(mobileUpdate, 7000);
-    }
-
-}, 2000);
 </script>
