@@ -10,35 +10,38 @@
 
     <input type="range" class="volume" min="0" max="1" step="0.01" value="1">
 
-    <audio class="radio" playsinline preload="none">
+    <audio class="radio">
         <source src="https://altair.streamerr.co/stream/radiocarducci" type="audio/mpeg">
     </audio>
 </div>
 
 <style>
 .radio-ui {
-    max-width: 520px;
+    max-width: 520px; /* PIÙ GRANDE */
     width: 100%;
-    background: #140606;
+    background: #140606; /* PIÙ ROSSO SCURO */
     border-radius: 30px;
-    padding: 30px;
+    padding: 30px; /* PIÙ SPAZIO */
     display: grid;
-    grid-template-columns: 100px 1fr auto;
+    grid-template-columns: 100px 1fr auto; /* PIÙ GRANDE */
+    grid-template-rows: auto auto;
     gap: 15px 20px;
     align-items: center;
     color: white;
     font-family: Arial;
+    box-shadow: 0 12px 35px rgba(255,0,0,0.3); /* GLOW ROSSO */
 }
 
 .cover {
-    width: 90px;
+    width: 90px; /* PIÙ GRANDE */
     height: 90px;
     border-radius: 12px;
     object-fit: cover;
+    grid-row: span 2;
 }
 
 .title {
-    font-size: 22px;
+    font-size: 22px; /* PIÙ GRANDE */
     font-weight: bold;
 }
 
@@ -47,6 +50,7 @@
     font-size: 16px;
 }
 
+/* BOTTONE ROSSO PIÙ EVIDENTE */
 .play {
     width: 75px;
     height: 75px;
@@ -56,17 +60,20 @@
     font-size: 26px;
     border: none;
     cursor: pointer;
+    grid-row: span 2;
+    box-shadow: 0 8px 20px rgba(255,0,0,0.5);
 }
 
+/* SLIDER ROSSO */
 .volume {
     grid-column: 2 / span 2;
     width: 100%;
-    accent-color: red;
+    accent-color: #ff0000;
 }
 </style>
 
 <script>
-window.addEventListener("load", function(){
+setTimeout(function(){
 
     const player = document.querySelector(".radio-ui");
     if (!player) return;
@@ -74,27 +81,64 @@ window.addEventListener("load", function(){
     const audio = player.querySelector(".radio");
     const btn = player.querySelector(".play");
     const volume = player.querySelector(".volume");
+    const title = player.querySelector(".title");
+    const artist = player.querySelector(".artist");
+    const cover = player.querySelector(".cover");
 
-    // 🔥 FIX MOBILE PLAY
-    btn.addEventListener("click", function(){
-
+    btn.onclick = function(){
         if(audio.paused){
-            audio.play().then(()=>{
-                btn.textContent = "⏸";
-            }).catch(()=>{
-                console.log("play bloccato");
-            });
+            audio.play();
+            btn.textContent = "⏸";
         } else {
             audio.pause();
             btn.textContent = "▶";
         }
+    };
 
-    });
-
-    // volume
-    volume.addEventListener("input", function(e){
+    volume.oninput = function(e){
         audio.volume = e.target.value;
-    });
+    };
 
-});
+    async function update(){
+        try{
+            const res = await fetch("https://altair.streamerr.co/json/stream/radiocarducci?"+Date.now());
+            const data = await res.json();
+
+            let song = data.songtitle || data.nowplaying || "";
+
+            if(!song || song.trim() === ""){
+                title.textContent = "Radio Carducci";
+                artist.textContent = "In onda";
+                return;
+            }
+
+            song = song.replace(/\s+/g, " ").trim();
+
+            let artistName = "";
+            let trackTitle = song;
+
+            if(song.includes(" - ")){
+                const parts = song.split(" - ");
+                artistName = parts[0].trim();
+                trackTitle = parts.slice(1).join(" - ").trim();
+            }
+
+            if(!trackTitle) trackTitle = song;
+
+            title.textContent = trackTitle;
+            artist.textContent = artistName || "In onda";
+
+            if(data.coverart){
+                cover.src = data.coverart.replace("100x100","300x300");
+            }
+
+        } catch(e){
+            console.log("metadata error", e);
+        }
+    }
+
+    update();
+    setInterval(update, 5000);
+
+}, 1000);
 </script>
