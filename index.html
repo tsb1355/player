@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-    margin:0;
-    font-family:Arial;
-}
+body { margin:0; font-family:Arial; }
 
 .player {
     background:#1e2b3f;
@@ -27,18 +24,11 @@ body {
     object-fit:cover;
 }
 
-.text {
-    flex:1;
-}
+.text { flex:1; }
 
-.title {
-    font-weight:bold;
-}
+.title { font-weight:bold; }
 
-.artist {
-    opacity:0.7;
-    font-size:13px;
-}
+.artist { opacity:0.7; font-size:13px; }
 
 button {
     width:50px;
@@ -84,40 +74,36 @@ btn.onclick = () => {
     }
 };
 
-// 🔥 METADATA (PROXY NUOVO FUNZIONANTE)
-async function update(){
-    try{
-        const res = await fetch(
-            "https://corsproxy.io/?https://altair.streamerr.co/json/stream/radiocarducci"
-        );
+// 🔥 METADATA (JSONP HACK)
+function loadMetadata() {
+    const script = document.createElement("script");
+    script.src = "https://altair.streamerr.co/json/stream/radiocarducci?callback=handleData";
+    document.body.appendChild(script);
+}
 
-        const data = await res.json();
+// callback globale
+function handleData(data) {
 
-        console.log("DATA:", data);
+    let song = data.songtitle || "";
 
-        let song = data.songtitle || "";
+    if(song.includes(" - ")){
+        let parts = song.split(" - ");
+        document.getElementById("artist").textContent = parts[0];
+        document.getElementById("title").textContent = parts.slice(1).join(" - ");
+    } else {
+        document.getElementById("title").textContent = song || "Radio Carducci";
+        document.getElementById("artist").textContent = "In onda";
+    }
 
-        if(song.includes(" - ")){
-            let parts = song.split(" - ");
-            document.getElementById("artist").textContent = parts[0];
-            document.getElementById("title").textContent = parts.slice(1).join(" - ");
-        } else {
-            document.getElementById("title").textContent = song || "Radio Carducci";
-            document.getElementById("artist").textContent = "In onda";
-        }
-
-        if(data.coverart){
-            document.getElementById("cover").src =
-                data.coverart.replace("100x100","300x300");
-        }
-
-    } catch(e){
-        console.log("ERRORE:", e);
+    if(data.coverart){
+        document.getElementById("cover").src =
+            data.coverart.replace("100x100","300x300");
     }
 }
 
-setInterval(update, 5000);
-update();
+// aggiorna ogni 5s
+setInterval(loadMetadata, 5000);
+loadMetadata();
 </script>
 
 </body>
