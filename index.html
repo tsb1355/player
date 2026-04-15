@@ -1,183 +1,169 @@
-<!-- ===== PLAYER CARD ===== -->
+<div class="radio-ui">
+    <img class="cover" src="https://via.placeholder.com/80">
 
-<div class="player-card">
+```
+<div class="text">
+    <div class="title">Caricamento...</div>
+    <div class="artist">...</div>
+</div>
 
-  <div class="player-top">
-    <div class="cover-wrap">
-      <div class="cover-placeholder" id="coverPlaceholder">
-        <img src="https://www.radiocarducci.com/wp-content/uploads/2025/03/Screenshot_14-3-2025_165252_.jpeg"
-             alt="RC"
-             onerror="this.parentElement.innerHTML='🎵'">
-      </div>
-      <img id="coverImg" class="cover-img" style="display:none" alt="cover">
-      <div class="cover-spin" id="coverSpin"></div>
-    </div>
-    <div class="player-info">
-      <div class="now-playing-label">▶ In onda ora</div>
-      <div class="track-title-wrap">
-        <div class="track-title" id="trackTitle">Radio Carducci</div>
-      </div>
-      <div class="track-artist" id="trackArtist">Streaming in diretta 24/7</div>
-    </div>
-  </div>
+<button class="play">▶</button>
 
-  <div class="waveform paused" id="waveform">
-    <div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div><div class="wave-bar"></div>
-    <div class="wave-bar"></div><div class="wave-bar"></div>
-  </div>
+<input type="range" class="volume" min="0" max="1" step="0.01" value="1">
 
-  <div class="controls">
-    <div style="flex:1">
-      <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1"
-             style="width:100%;accent-color:var(--red)"
-             oninput="setVolume(this.value)">
-    </div>
-    <button class="play-btn" id="playBtn" onclick="togglePlay()">
-      <div class="play-icon" id="playIcon"></div>
-    </button>
-  </div>
-
-  <div class="history-section" id="historySection" style="display:none">
-    <div class="history-label">Ascoltati di recente</div>
-    <div class="history-list" id="historyList"></div>
-  </div>
+<audio class="radio"></audio>
+```
 
 </div>
 
-<audio id="audio" preload="none"></audio>
+<style>
+.radio-ui {
+    max-width: 520px;
+    width: 100%;
+    background: #140606;
+    border-radius: 30px;
+    padding: 30px;
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 15px 20px;
+    align-items: center;
+    color: white;
+    font-family: Arial;
+    box-shadow: 0 12px 35px rgba(255,0,0,0.3);
+}
+
+.cover {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    object-fit: cover;
+    grid-row: span 2;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.artist {
+    opacity: 0.8;
+    font-size: 16px;
+}
+
+.play {
+    width: 75px;
+    height: 75px;
+    background: linear-gradient(135deg, #ff0000, #990000);
+    border-radius: 50%;
+    color: white;
+    font-size: 26px;
+    border: none;
+    cursor: pointer;
+    grid-row: span 2;
+    box-shadow: 0 8px 20px rgba(255,0,0,0.5);
+}
+
+.volume {
+    grid-column: 2 / span 2;
+    width: 100%;
+    accent-color: #ff0000;
+}
+</style>
 
 <script>
-const STREAM_URL = 'https://altair.streamerr.co/stream/radiocarducci';
-const audio       = document.getElementById('audio');
-const playBtn     = document.getElementById('playBtn');
-const playIcon    = document.getElementById('playIcon');
-const trackTitle  = document.getElementById('trackTitle');
-const trackArtist = document.getElementById('trackArtist');
-const coverImg    = document.getElementById('coverImg');
-const coverPlaceholder = document.getElementById('coverPlaceholder');
-const coverSpin   = document.getElementById('coverSpin');
-const waveform    = document.getElementById('waveform');
-const historyList = document.getElementById('historyList');
-const historySection = document.getElementById('historySection');
+setTimeout(function(){
 
-let isPlaying      = false;
-let reconnectTimer = null;
-let lastSong       = '';
-const history      = [];
+    const player = document.querySelector(".radio-ui");
+    if (!player) return;
 
-// ── PLAY / PAUSA ─────────────────────────────────────────
-function togglePlay() {
-  if (!isPlaying) {
-    isPlaying = true;
-    audio.src = STREAM_URL + '?' + Date.now();
-    audio.play().catch(() => reconnect());
-    playIcon.classList.add('pause');
-    playBtn.classList.add('playing');
-    coverSpin.classList.add('active');
-    waveform.classList.remove('paused');
-  } else {
-    isPlaying = false;
-    clearTimeout(reconnectTimer);
-    audio.pause();
-    audio.src = '';
-    playIcon.classList.remove('pause');
-    playBtn.classList.remove('playing');
-    coverSpin.classList.remove('active');
-    waveform.classList.add('paused');
-  }
-}
+    const audio  = player.querySelector(".radio");
+    const btn    = player.querySelector(".play");
+    const volume = player.querySelector(".volume");
+    const title  = player.querySelector(".title");
+    const artist = player.querySelector(".artist");
+    const cover  = player.querySelector(".cover");
 
-// ── VOLUME ────────────────────────────────────────────────
-function setVolume(val) { audio.volume = val; }
+    const STREAM_URL = "https://altair.streamerr.co/stream/radiocarducci";
+    let isPlaying      = false;
+    let reconnectTimer = null;
 
-// ── RICONNESSIONE AUTOMATICA ──────────────────────────────
-function reconnect() {
-  if (!isPlaying) return;
-  clearTimeout(reconnectTimer);
-  reconnectTimer = setTimeout(() => {
-    audio.src = STREAM_URL + '?' + Date.now();
-    audio.load();
-    audio.play().catch(() => reconnect());
-  }, 3000);
-}
-
-audio.addEventListener('error',   () => reconnect());
-audio.addEventListener('stalled', () => reconnect());
-audio.addEventListener('waiting', () => {
-  reconnectTimer = setTimeout(() => {
-    if (audio.readyState < 3) reconnect();
-  }, 5000);
-});
-audio.addEventListener('playing', () => clearTimeout(reconnectTimer));
-
-// ── METADATA + HISTORY ────────────────────────────────────
-async function updateMetadata() {
-  try {
-    const res  = await fetch('https://altair.streamerr.co/json/stream/radiocarducci?' + Date.now());
-    const data = await res.json();
-
-    let song = data.songtitle || data.nowplaying || '';
-
-    if (!song.trim()) {
-      trackTitle.textContent  = 'Radio Carducci';
-      trackArtist.textContent = 'In onda';
-      return;
+    function reconnect() {
+        if (!isPlaying) return;
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(function() {
+            audio.src = STREAM_URL + "?" + Date.now();
+            audio.load();
+            audio.play().catch(function() { reconnect(); });
+        }, 3000);
     }
 
-    song = song.replace(/\s+/g, ' ').trim();
+    audio.addEventListener("error",   function() { reconnect(); });
+    audio.addEventListener("stalled", function() { reconnect(); });
+    audio.addEventListener("waiting", function() {
+        reconnectTimer = setTimeout(function() {
+            if (audio.readyState < 3) reconnect();
+        }, 5000);
+    });
+    audio.addEventListener("playing", function() { clearTimeout(reconnectTimer); });
 
-    let artist = '';
-    let title  = song;
+    btn.onclick = function() {
+        if (!isPlaying) {
+            isPlaying = true;
+            audio.src = STREAM_URL + "?" + Date.now();
+            audio.play().catch(function() { reconnect(); });
+            btn.textContent = "⏸";
+        } else {
+            isPlaying = false;
+            clearTimeout(reconnectTimer);
+            audio.pause();
+            audio.src = "";
+            btn.textContent = "▶";
+        }
+    };
 
-    if (song.includes(' - ')) {
-      const parts = song.split(' - ');
-      artist = parts[0].trim();
-      title  = parts.slice(1).join(' - ').trim();
+    volume.oninput = function(e) {
+        audio.volume = e.target.value;
+    };
+
+    async function update() {
+        try {
+            const res  = await fetch("https://altair.streamerr.co/json/stream/radiocarducci?" + Date.now());
+            const data = await res.json();
+
+            let song = data.songtitle || data.nowplaying || "";
+
+            if (!song || song.trim() === "") {
+                title.textContent  = "Radio Carducci";
+                artist.textContent = "In onda";
+                return;
+            }
+
+            song = song.replace(/\s+/g, " ").trim();
+
+            let artistName = "";
+            let trackTitle = song;
+
+            if (song.includes(" - ")) {
+                const parts = song.split(" - ");
+                artistName = parts[0].trim();
+                trackTitle = parts.slice(1).join(" - ").trim();
+            }
+
+            title.textContent  = trackTitle  || song;
+            artist.textContent = artistName || "In onda";
+
+            if (data.coverart) {
+                cover.src = data.coverart.replace("100x100", "300x300");
+            }
+
+        } catch(e) {
+            console.log("metadata error", e);
+        }
     }
 
-    trackTitle.textContent  = title  || song;
-    trackArtist.textContent = artist || 'In onda';
+    update();
+    setInterval(update, 5000);
 
-    // cover art
-    if (data.coverart) {
-      const src = data.coverart.replace('100x100', '300x300');
-      coverImg.src = src;
-      coverImg.onload = () => {
-        coverImg.style.display = 'block';
-        coverPlaceholder.style.display = 'none';
-      };
-    }
-
-    // history
-    if (song !== lastSong && lastSong !== '') {
-      history.unshift({ title: trackTitle.textContent, artist: trackArtist.textContent, cover: data.coverart || '' });
-      if (history.length > 3) history.pop();
-      renderHistory();
-    }
-    lastSong = song;
-
-  } catch(e) {
-    console.log('metadata error', e);
-  }
-}
-
-function renderHistory() {
-  if (!history.length) return;
-  historySection.style.display = 'block';
-  historyList.innerHTML = history.map((h, i) => `
-    <div class="history-item" style="animation-delay:${i * 0.08}s">
-      ${h.cover
-        ? `<img class="history-cover" src="${h.cover}" alt="">`
-        : `<div class="history-cover"></div>`}
-      <div class="history-title">${h.artist ? h.artist + ' – ' : ''}${h.title}</div>
-    </div>
-  `).join('');
-}
-
-updateMetadata();
-setInterval(updateMetadata, 5000);
+}, 1000);
 </script>
